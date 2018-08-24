@@ -109,15 +109,6 @@ class CausalModelShallow(BayesianCausalModel):
                         log_prod_k_fact,
                         effect_terms[0], effect_terms[1],))
 
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            details = {
-                    'timestamp': timestamp,
-                    'direction': direction,
-                    'terms': terms
-                    }
-
-            with open('./details.txt', 'a') as f:
-                f.write(str(details) + '\n')
 
         if return_terms:
             return evidence, terms

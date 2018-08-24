@@ -12,7 +12,7 @@ class CausalModelNoiseInference(CausalModelShallow):
             rho=1,
             ):
         super().__init__(
-                N_pix=N_pix
+                N_pix=N_pix,
                 power_spectrum_f=power_spectrum_f,
                 power_spectrum_beta=power_spectrum_beta,
                 rho=rho)
@@ -105,15 +105,6 @@ class CausalModelNoiseInference(CausalModelShallow):
                         log_prod_k_fact,
                         effect_terms[0], effect_terms[1],))
 
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            details = {
-                    'timestamp': timestamp,
-                    'direction': direction,
-                    'terms': terms
-                    }
-
-            with open('./details.txt', 'a') as f:
-                f.write(str(details) + '\n')
 
         if return_terms:
             return evidence, terms

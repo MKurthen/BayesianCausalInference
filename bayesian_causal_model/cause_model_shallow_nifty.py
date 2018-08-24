@@ -9,7 +9,7 @@ from .energies.cause_energy_shallow import CauseEnergyShallow
 from .utilities import probe_operator
 
 
-class CausalModelCauseShallow(BayesianCausalModel):
+class CausalModelShallow(BayesianCausalModel):
     """
     bayesian causal model where the causal direction is inferred. Here with
         given power spectra and noise variance. A Laplace approximation via
@@ -137,32 +137,6 @@ class CausalModelCauseShallow(BayesianCausalModel):
                 ('1/2 ln(det(F_tilde + N))', effect_terms[1]),
                 ]
 
-        if verbosity > 0:
-            """
-            print(
-                    'numerical values of terms: \n'
-                    '   1/2 ln(|DB|):                  {:.2e}\n'
-                    '   -k^dagger.beta_vec:           {:.2e}\n'
-                    '   rho(One.e^beta_0_vec):        {:.2e}\n'
-                    '   1/2 beta_0.B^-1.beta_0:       {:.2e}\n'
-                    '   ln(prod(k_j!)):               {:.2e}\n'
-                    '   1/2 y^T.((F_tilde + N)^-1).y: {:.2e}\n'
-                    '   1/2 ln(|F_tilde + N|):        {:.2e}'.format(
-                        0.5*ln_det_DB,
-                        energy_terms[0], energy_terms[1], energy_terms[2],
-                        log_prod_k_fact,
-                        effect_terms[0], effect_terms[1],))
-
-            """
-            timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-            details = {
-                    'timestamp': timestamp,
-                    'direction': direction,
-                    'terms': terms
-                    }
-
-            with open('./details.txt', 'a') as f:
-                f.write(str(details) + '\n')
 
         if return_terms:
             return evidence, terms
