@@ -1,0 +1,7 @@
+digraph G {
+  center = 1;
+  size = "10, 10";
+  1 [label = "x1", shape = ellipse, style = "solid"];
+  2 [label = "x2", shape = ellipse, style = "solid"];
+  1 -> 2 [style = solid, color = black, label = "10"];
+}
