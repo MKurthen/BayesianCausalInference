@@ -94,7 +94,7 @@ for i in range(FIRST_ID-1, LAST_ID):
     else:
         (x, y), true_direction = get_pair(i, BENCHMARK)
         weight = 1
-    if true_direction == -1:
+    if true_direction == 0:
         continue
 
     scaler = MinMaxScaler(scale)
@@ -107,6 +107,14 @@ for i in range(FIRST_ID-1, LAST_ID):
             ))
 
     if MODEL == 1:
+        bcm = bayesian_causal_model.cause_model_shallow_numpy.CausalModelShallow(
+            N_pix=N_BINS,
+            noise_var=NOISE_VAR,
+            rho=RHO,
+            power_spectrum_beta=POWER_SPECTRUM_BETA,
+            power_spectrum_f=POWER_SPECTRUM_F,
+            )
+    elif MODEL == 2: 
         bcm = bayesian_causal_model.cause_model_shallow_nifty.CausalModelShallow(
             N_pix=N_BINS,
             noise_var=NOISE_VAR,
@@ -115,35 +123,12 @@ for i in range(FIRST_ID-1, LAST_ID):
             power_spectrum_f=POWER_SPECTRUM_F,
             minimizer=minimizer,
             )
-    elif MODEL == 2: 
-        bcm = bayesian_causal_model.cause_model_shallow_numpy.CausalModelShallow(
-            N_pix=N_BINS,
-            noise_var=NOISE_VAR,
-            rho=RHO,
-            power_spectrum_beta=POWER_SPECTRUM_BETA,
-            power_spectrum_f=POWER_SPECTRUM_F,
-            )
-
-    elif MODEL == 3:
-        bcm = CausalModelCauseDeep(
-            noise_var=NOISE_VAR,
-            N_pix=N_BINS,
-            rho=RHO,
-            power_spectrum_f=POWER_SPECTRUM_F,
-            minimizer=minimizer,
-            )
-    elif MODEL == 4:
-        bcm = CausalModelEffectShallow(
-            N_pix=N_BINS,
-            sigma_f=1e4,
-            power_spectrum_beta=POWER_SPECTRUM_BETA,
-            minimizer=minimizer)
 
     bcm.set_data(x, y)
 
     H1 = bcm.get_evidence(direction=1, verbosity=1)
     H2 = bcm.get_evidence(direction=-1, verbosity=1)
-    predicted_direction = int(H1 < H2)
+    predicted_direction = 1 if int(H1 < H2) else 0
     if predicted_direction == 1 and true_direction == 1:
         tp += 1
     if predicted_direction == 1 and true_direction == 0:
@@ -175,18 +160,16 @@ print('accuracy: {:.2f}'.format(accuracy))
 
 
 benchmark_information = {
+        'benchmark': BENCHMARK,
         'model': MODEL,
         'n_bins': N_BINS,
         'noise_var': NOISE_VAR,
         'rho': RHO,
         'power_spectrum_beta': POWER_SPECTRUM_BETA_STR,
         'power_spectrum_f': POWER_SPECTRUM_F_STR,
-        'iteration_limit': ITERATION_LIMIT,
-        'tol_rel_gradnorm': TOL_REL_GRADNORM,
-        'minimizer': 'VL_BFGS',
         'accuracy': accuracy,
         'prediction_file': prediction_file,
         }
 
-with open('cha_benchmarks.txt', 'a') as f:
+with open('benchmark_predictions/benchmarks_meta.txt', 'a') as f:
     f.write(str(benchmark_information) + '\n')
