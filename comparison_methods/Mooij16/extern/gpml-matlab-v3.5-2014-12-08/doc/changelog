@@ -1,0 +1,12 @@
+ GAUSSIAN PROCESS REGRESSION AND CLASSIFICATION Toolbox version 3.5
+    for GNU Octave 3.2.x and Matlab 7.x 
+
+Copyright (c) by Carl Edward Rasmussen and Hannes Nickisch, 2015-03-23.
+
+Changes and small incremental bug fixes applied since the last major release
+from 2014-12-08.
+
+- smal bugfixes in covGrid and infGrid
+- bugfix in predictive variance of likNegBinom due to Seth Flaxman
+- bugfix in infFITC_Laplace as suggested by Wu Lin
+- bugfix in covPP{iso,ard}

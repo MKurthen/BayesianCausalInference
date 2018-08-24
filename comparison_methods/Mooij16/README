@@ -1,0 +1,124 @@
+INTRODUCTION
+------------
+
+This is the README accompanying the software to reproduce the results reported in:
+
+Distinguishing cause from effect using observational data: methods and benchmarks
+J. M. Mooij, J. Peters, D. Janzing, J. Zscheischler, B. Schölkopf
+To appear in Journal of Machine Learning Research, 2016
+
+We provide this code in the hope that it will be useful, at the very least in
+order to reproduce the results we report in the article. If you use this code
+for a scientific publication, please cite this paper.
+
+In order to reproduce the results, in addition to this code, you need the
+CauseEffectPairs benchmark data version 1.0, available at
+http://webdav.tuebingen.mpg.de/cause-effect/
+
+This code is distributed under a FreeBSD license. Some libraries that we use were
+written by others and other licenses apply to those parts (see below).
+
+The code was tested on a Linux platform with MatLab 7.11.0.584 (R2010b) 64-bit (glnxa64).
+
+Any feedback on this code is welcome (email: j dot m dot mooij at uva dot nl).
+
+Joris Mooij
+December 24, 2015
+
+
+LICENSES
+--------
+
+Our code depends on several external software packages that are distributed
+under different licenses:
+
+GPML		FreeBSD		http://gaussianprocess.org/gpml/code/matlab/release/gpml-matlab-v3.5-2014-12-08.tar.gz
+ITE		GPL v3		https://bitbucket.org/szzoli/ite/downloads/ITE-0.61_code.tar.bz2
+MMLMIXTURES	GPL v2		http://www.lx.it.pt/%7Emtf/mixturecode2.zip
+
+For convenience of the user, we have bundled as many as possible external
+software packages together with our own code (which has a FreeBSD license). We
+have slightly modified the MMLMIXTURES code. The GPML copy is unchanged by us.
+
+However, because of an incompatibility between the GPLv2 and GPLv3 licenses,
+users have to download the Information Theoretic Estimators toolbox and put it
+into the ITE subdirectory by themselves (see below for instructions).
+
+The GPML package can be made to run much faster by compiling the MEX files. For
+details, see the documentation of the GPML package.
+
+
+QUICK START
+-----------
+
+Here are some instructions on how to reproduce the plots in the article:
+
+1) Install ITE in code/extern/ITE:
+
+	$ cd code/extern
+	$ wget https://bitbucket.org/szzoli/ite/downloads/ITE-0.61_code.tar.bz2
+	$ mkdir ITE
+	$ cd ITE
+	$ tar jxvf ../ITE-0.61_code.tar.bz2
+
+Patch code/extern/ITE/code/shared/embedded/KDP/mat_oct/mexme.m:
+
+	Replace the line:
+	    mex CFLAGS='-std=gnu99 -D_GNU_SOURCE' -outdir private   -I../kdpee  private/kdpeemex.c ../src/kdpee.c
+	by:
+	    mex CFLAGS='-std=gnu99 -fPIC -D_GNU_SOURCE' -outdir private   -I../kdpee  private/kdpeemex.c ../src/kdpee.c
+
+Then, from within the directory code/extern/ITE/code, run ITE_install.m from MatLab.
+
+
+2) Build GPML
+
+In code/extern/gpml-matlab-v3.5-2014-12-08/util: 
+
+	run make.m from MatLab.
+
+In code/extern/gpml-matlab-v3.5-2014-12-08/util/lbfgsb:
+
+	modify Makefile according to your local config and run GNU make from the command line.
+
+
+3) Build fasthsic
+
+	$ cd code/fasthsic
+	$ make
+
+
+4) Simulate data
+
+	$ cd code/experiments
+	$ ./simdata_article.sh
+
+Alternatively: download the online appendix on the JMLR website that contains
+the simulated data that we used in the paper and unzip it into code/experiments.
+We generated this data using the commands above, but on different platforms,
+the simulations could produce different outputs (basically due to differences
+in random number generation).
+
+
+5) Download CEP data: 
+
+	$ cd code/experiments
+	$ wget https://webdav.tuebingen.mpg.de/cause-effect/pairs_1.0.zip
+	$ unzip pairs_1.0.zip
+	$ mv pairs_1.0 CEP
+
+
+6) Run experiments:
+
+In code/experiments:
+	Change PARALLEL=25 in runmethods_article.sh into a reasonable maximum number of parallel jobs 
+	(should be less than the number of cores of your platform)
+
+Run (patience needed!):
+	$ cd code/experiments
+	$ ./runmethods_article.sh 1 100
+	$ matlab -nodisplay -singleCompThread -r "make_plots_article(0);exit" < /dev/null > make_plots_article.stdout 2> make_plots_article.stderr
+
+Plots will be written to the subdirectory code/experiments/plots_article
+Numbers and debugging info can be obtained from code/experiments/make_plots_article.stdout 
+(and make_plots_article.stderr in case of an error).
