@@ -26,15 +26,17 @@ eng.startup(nargout=0)
 eng.local_config(nargout=0)
 
 methodpars = eng.struct()
-#methodpars['FITC'] = 100
+methodpars['FITC'] = 0
+methodpars['minimize'] = 'minimize_lbfgsb'
 methodpars['evaluation'] = 'HSIC'
 
 accuracy = 0
 correct_decisions = 0
+undecided = 0
 
 for i in range(FIRST_ID-1, LAST_ID):
     (x, y), true_direction = get_pair(i, BENCHMARK)
-    if true_direction == -1:
+    if true_direction == 0:
         continue
 
     x_ = matlab.double(x.tolist())
@@ -47,6 +49,8 @@ for i in range(FIRST_ID-1, LAST_ID):
 
     if predicted_direction == true_direction:
         correct_decisions += 1
+    if predicted_direction == 0:
+        undecided += 1
     
     accuracy = correct_decisions / (i + 1)
 
@@ -55,5 +59,5 @@ for i in range(FIRST_ID-1, LAST_ID):
         i, true_direction, predicted_direction, accuracy))
 
 
-print('accuracy: {:.2f}'.format(accuracy))
+print('accuracy: {:.2f}, undecided: {}'.format(accuracy, undecided))
 

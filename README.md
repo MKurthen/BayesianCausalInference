@@ -6,12 +6,15 @@
     -SciPy 1.1.0
 
 to use the NIFTy implementation:
+
     -NIFTy 5
 
 the Jupyter notebooks havee been created using
+
     -jupyter 1.0.0
 
 the Plots have been done using
+
     -matplotlib 2.2.3
     -seaborn 0.9.0
 
