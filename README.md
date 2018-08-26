@@ -18,11 +18,22 @@ the Plots have been done using
     -matplotlib 2.2.3
     -seaborn 0.9.0
 
+to use the methods for comparison:
+  CGNN requires
+  
+    -tensorflow 1.10.0
+    -joblib 0.12.2
+
+  ANM-HSIC, ANM-MML, IGCI require
+
+    -installed Matlab5 libraries, to use the Matlab API
+      (see https://www.mathworks.com/help/matlab/matlab_external/get-started-with-matlab-engine-for-python.html )
 
 # Benchmarks
 
 to perform a benchmark, call the script do_benchmark.py via:
-  python do_benchmark.py --args
+
+    python do_benchmark.py --args
   
 where args refer to:
 
