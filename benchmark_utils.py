@@ -27,7 +27,7 @@ DEFAULT_BENCHMARK_LENGTH = {
 def get_benchmark_default_length(benchmark):
     return DEFAULT_BENCHMARK_LENGTH[benchmark]
 
-def get_pair(i, benchmark, return_weight=False):
+def get_pair(i, benchmark):
     if benchmark == 'CE-Cha':
         with open(os.path.join(
                 dir_path, './benchmark_data_pairwise/CE-Cha_pairs.tab')) as f:
@@ -46,6 +46,7 @@ def get_pair(i, benchmark, return_weight=False):
         true_direction = targets[i]
         if true_direction == 0:
             true_direction = -1
+        weight = 1
 
     elif benchmark in [ 
             'SIM',
@@ -90,22 +91,16 @@ def get_pair(i, benchmark, return_weight=False):
 
         if benchmark == 'tcep':
             weight = meta[i, 5]
+        else:
+            weight = 1
 
-            if return_weight:
-                return pair, true_direction, weight
-    return pair, true_direction
+    return pair, true_direction, weight
 
 
 class BCMParser(argparse.ArgumentParser):
     def __init__(self):
         super().__init__(description='perform inference tests')
 
-        self.add_argument(
-                '--num', type=int, default=1,
-                help='number of iterations to test')
-        self.add_argument(
-                '--seeded', type=bool, default=False,
-                help='use fixed random seeds')
         self.add_argument(
                 '--name', type=str, help='name for the benchmark results')
         self.add_argument(
@@ -145,12 +140,11 @@ class BCMParser(argparse.ArgumentParser):
                 '--verbosity', type=int, default=0,
                 help='verbosity of output')
         self.add_argument(
-                '--benchmark', type=str, default='Cha',
-                help='which benchmark case, "Cha", "Gauss", "tcep",'
-                    '"bcs_nvar5e-2", "bcs_nvar1e-1", "bcs_nvar5e-1"')
+                '--benchmark', type=str, default='bcs_default',
+                help='which benchmark case, see DEFAULT_BENCHMARK_LENGTH dict')
         self.add_argument(
                 '--model', type=int, default=1,
                 help='which model to use for inference')
         self.add_argument(
-                '--scale_max', type=float, default=0.8,
+                '--scale_max', type=float, default=1,
                 help='scale the data to the interval [0, scale_max]')

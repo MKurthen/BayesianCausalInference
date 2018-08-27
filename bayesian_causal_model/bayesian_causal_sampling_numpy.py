@@ -60,10 +60,17 @@ class BayesianCausalSampler(object):
                 mean=np.zeros(self.N_bins),
                 cov=self.F)
 
-    def get_samples(self, sample_size, poisson=True, discretize=False):
+    def get_samples(self, sample_size, poisson=True, discretize=True):
         """
         return samples for X, Y with a sample size
         if poisson=True, the sample_size will only be approximately
+
+        poisson : bool,
+            use the Poissonian formulation of the thesis for the forward model
+
+        discretize : bool,
+            perform the discretization also for the y-variable (the sampled
+            y-data will be rounded to neares grid points)
         """
         if poisson:
             # draw with poisson dist, where each lambda[i] propto exp(beta)
