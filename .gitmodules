@@ -1,0 +1,3 @@
+[submodule "comparison_methods/CGNN"]
+	path = comparison_methods/CGNN
+	url = https://github.com/GoudetOlivier/CGNN.git
