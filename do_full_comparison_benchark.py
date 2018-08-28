@@ -1,8 +1,5 @@
-import os
-import re
 import sys
 
-import colorama
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
@@ -44,9 +41,7 @@ cgnn.SETTINGS.NB_GPU = 1
 cgnn.SETTINGS.NB_JOBS = 1
 cgnn.SETTINGS.h_layer_dim = 30
 cgnn.SETTINGS.use_Fast_MMD = True
-cgnn.SETTINGS.NB_RUNS =8
-
-
+cgnn.SETTINGS.NB_RUNS = 8
 
 sum_of_weights = 0
 accuracy_bcm = 0
@@ -64,7 +59,7 @@ for i in range(FIRST_ID-1, LAST_ID):
     if true_direction == 0:
         continue
 
-    scaler = MinMaxScaler(feature_range=(0,1))
+    scaler = MinMaxScaler(feature_range=(0, 1))
     x_scaled, y_scaled = scaler.fit_transform(np.array((x, y)).T).T
 
     # test bcm
