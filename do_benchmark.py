@@ -1,7 +1,4 @@
-import logging
-logging.basicConfig(level=logging.ERROR)
 import os
-import re
 
 import colorama
 import numpy as np
@@ -9,15 +6,10 @@ from sklearn.preprocessing import MinMaxScaler
 
 import nifty5
 
-import bayesian_causal_model.cause_model_shallow_nifty
-import bayesian_causal_model.cause_model_shallow_numpy
-#from bayesian_causal_model.cause_model_deep import CausalModelCauseDeep
-#from bayesian_causal_model.effect_model_shallow import CausalModelEffectShallow
-#from bayesian_causal_model.bayesian_causal_sampling import BayesianCausalSampler
+import bayesian_causal_model.cause_model_shallow
+import bayesian_causal_model_nifty.cause_model_shallow
 from parser import BCMParser
 from benchmark_utils import get_benchmark_default_length, get_pair
-logging.basicConfig(level=logging.ERROR)
-
 
 parser = BCMParser()
 args = parser.parse_args()
@@ -90,7 +82,8 @@ tp, tn, fp, fn = 0, 0, 0, 0
 
 for i in range(FIRST_ID-1, LAST_ID):
     if BENCHMARK == 'tcep':
-        (x, y), true_direction, weight = get_pair(i, BENCHMARK, return_weight=True)
+        (x, y), true_direction, weight = get_pair(
+                i, BENCHMARK, return_weight=True)
     else:
         (x, y), true_direction = get_pair(i, BENCHMARK)
         weight = 1
@@ -107,15 +100,15 @@ for i in range(FIRST_ID-1, LAST_ID):
             ))
 
     if MODEL == 1:
-        bcm = bayesian_causal_model.cause_model_shallow_numpy.CausalModelShallow(
+        bcm = bayesian_causal_model.cause_model_shallow.CausalModelShallow(
             N_pix=N_BINS,
             noise_var=NOISE_VAR,
             rho=RHO,
             power_spectrum_beta=POWER_SPECTRUM_BETA,
             power_spectrum_f=POWER_SPECTRUM_F,
             )
-    elif MODEL == 2: 
-        bcm = bayesian_causal_model.cause_model_shallow_nifty.CausalModelShallow(
+    elif MODEL == 2:
+        bcm = bayesian_causal_model_nifty.cause_model_shallow.CausalModelShallow(
             N_pix=N_BINS,
             noise_var=NOISE_VAR,
             rho=RHO,
@@ -138,24 +131,30 @@ for i in range(FIRST_ID-1, LAST_ID):
     if predicted_direction == 0 and true_direction == 0:
         tn += 1
 
-
     if predicted_direction == true_direction:
         fore = colorama.Fore.GREEN
         weighted_correct += weight
     else:
         fore = colorama.Fore.RED
     sum_of_weights += weight
-    accuracy = weighted_correct / sum_of_weights 
+    accuracy = weighted_correct / sum_of_weights
 
-    print('dataset {}, {} true direction: {}, predicted direction {}\n'
+    print(
+            'dataset {}, {} true direction: {}, predicted direction {}\n'
             'H1: {:.2e},\n H2: {:.2e},\n{}'
             'accuracy so far: {:.2f}'.format(
-        i, fore, true_direction, predicted_direction, H1, H2, colorama.Style.RESET_ALL, accuracy))
+                i,
+                fore,
+                true_direction,
+                predicted_direction,
+                H1,
+                H2,
+                colorama.Style.RESET_ALL,
+                accuracy))
 
     with open(prediction_file, 'a') as f:
         f.write('{} {} {} {}\n'.format(i+1, predicted_direction, H1, H2))
 
-#accuracy = (tp+tn)/(tp+tn+fp+fn)
 print('accuracy: {:.2f}'.format(accuracy))
 
 
