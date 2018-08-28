@@ -28,7 +28,6 @@ eng.addpath(CAUSALITY_ROOT + 'comparison_methods/Mooij16/cep')
 eng.startup(nargout=0)
 eng.local_config(nargout=0)
 # disable all output
-eng.system('dir 1>NUL 2>NUL')
 
 methodpars_anm_hsic = eng.struct()
 methodpars_anm_hsic['FITC'] = 0
