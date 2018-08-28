@@ -1,4 +1,4 @@
-# Prerequisits
+# Prerequisites
     -Python 3.6.6
     -Colorama 0.3.9
     -Numpy 1.15.0
