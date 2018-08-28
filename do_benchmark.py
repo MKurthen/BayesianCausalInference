@@ -101,7 +101,7 @@ for i in range(FIRST_ID-1, LAST_ID):
 
     if MODEL == 1:
         bcm = bayesian_causal_model.cause_model_shallow.CausalModelShallow(
-            N_pix=N_BINS,
+            N_bins=N_BINS,
             noise_var=NOISE_VAR,
             rho=RHO,
             power_spectrum_beta=POWER_SPECTRUM_BETA,
@@ -109,7 +109,7 @@ for i in range(FIRST_ID-1, LAST_ID):
             )
     elif MODEL == 2:
         bcm = bayesian_causal_model_nifty.cause_model_shallow.CausalModelShallow(
-            N_pix=N_BINS,
+            N_bins=N_BINS,
             noise_var=NOISE_VAR,
             rho=RHO,
             power_spectrum_beta=POWER_SPECTRUM_BETA,

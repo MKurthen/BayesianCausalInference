@@ -63,7 +63,7 @@ for i in range(FIRST_ID-1, LAST_ID):
 
     # test bcm
     bcm = bayesian_causal_model.cause_model_shallow.CausalModelShallow(
-        N_pix=512,
+        N_bins=512,
         noise_var=1e-2,
         rho=1,
         power_spectrum_beta=lambda q: 2048/(q**4 + 1),
