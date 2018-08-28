@@ -1,10 +1,8 @@
 import numpy as np
+import scipy
+import scipy.linalg
 
-import nifty5.operators.chain_operator
-import scipy.stats
-
-
-from .utilities import probe_operator, get_count_vector
+from .utilities import get_count_vector, remove_duplicates
 
 
 class BayesianCausalModel(object):
@@ -14,39 +12,18 @@ class BayesianCausalModel(object):
 
     Parameters:
     ----------
-    power_spectrum_beta: function
-        the power spectrum of the beta field distribution covariance
-    power_spectrum_f: function
-        the power spectrum of the covrariance of the distribution for the
-        field representing the relating function
-    N_pix : int
+    N_bins : int
         the number of grid points for the field discretization
-    noise_var : scalar
-        the variance for the sampling of noise variables
-    rho : scalar
-        density of the response
-    minimization : string
-        currently supported: 'nifty5.vl_bfgs', 'nifty5.relaxed_newton',
-        'nifty5.steepest_descent', 'scipy'
     """
     def __init__(
             self,
-            N_pix=1024,
+            N_bins=1024,
             ):
-        self.N_pix = N_pix
-        self.s_space = nifty5.RGSpace(
-                [N_pix], distances=1/N_pix)
+        self.N_bins = N_bins
+        self.grid_coordinates = np.arange(0, 1, 1/N_bins)
+        self.grid = np.arange(self.N_bins)
 
-        self.fft = nifty5.FFTOperator(self.s_space)
-        self.h_space = self.s_space.get_default_codomain()
-        self.p_space = nifty5.PowerSpace(harmonic_partner=self.h_space)
-        self.grid_coordinates = [i*self.s_space.distances[0] for i in range(
-            self.N_pix)]
-        # as measurement grid we take the underlying grid of the nifty
-        #   signal space
-        self.grid = np.arange(self.N_pix)
-
-    def get_effect_terms(self, direction=1):
+    def get_effect_terms(self, direction, F, noise_var):
         """
         convenience function to collect terms for the evidence hamiltonian
             which belong to the effect, i.e. H(y|x, F, N, X->Y)
@@ -62,49 +39,81 @@ class BayesianCausalModel(object):
                 for i in range(self.N)]
             effect_samples = self.x
 
-        F_h = nifty5.create_power_operator(
-                domain=self.h_space, power_spectrum=self.power_spectrum_f)
-        # get the F(x_i, x_j) matrix
-        F = nifty5.operators.chain_operator.ChainOperator.make(
-                (self.fft.adjoint, F_h, self.fft))
-
-        self.F_matrix = probe_operator(F)
-        F_tilde = np.zeros((self.N, self.N))
+        self.F_tilde = np.zeros((self.N, self.N))
         for i in range(self.N):
             for j in range(i+1):
-                F_tilde[i, j] = self.F_matrix[
+                self.F_tilde[i, j] = F[
                         cause_sample_indices[i], cause_sample_indices[j]]
                 if i != j:
-                    F_tilde[j, i] = self.F_matrix[
+                    self.F_tilde[j, i] = F[
                             cause_sample_indices[i], cause_sample_indices[j]]
 
         # the noise covariance matrix N
         noise_covariance = np.diag(
-                [self.noise_var for _ in range(self.N)])
+                [noise_var for _ in range(self.N)])
 
         # get the inverse (G_x)_ij = (F(x_i, x_j) + N)^-1
-        self.Gx = np.linalg.inv(F_tilde + noise_covariance)
+        self.Gx = np.linalg.inv(self.F_tilde + noise_covariance)
 
         # 1/2 y^T.(F_tilde + N)^-1).y
         term1 = 0.5*effect_samples@self.Gx@effect_samples
 
-        # we further need 1/2*ln(det(x_F_x + N))
-        sign, ln_det_F_tilde = np.linalg.slogdet(F_tilde + noise_covariance)
+        # we further need 1/2*ln(det(F_tilde + N))
+        sign, ln_det = np.linalg.slogdet(self.F_tilde + noise_covariance)
         if sign <= 0:
-            print('warning, computed sign {} in ln(det(x_F_x + N))'.format(
+            print('warning, computed sign {} in ln(det(F_tilde + N))'.format(
                 sign))
-        term2 = 0.5*ln_det_F_tilde
+        term2 = 0.5*ln_det
+
         return (term1, term2)
 
-    def set_data(self, x, y):
+    def get_cause_terms(self, k, method='Newton-CG', beta_init=None):
+        # initial guess for beta is proportional to k
+        if beta_init is None:
+            beta_init = np.log(k/self.rho + 1e-3)
+
+        self.minimization_result = scipy.optimize.minimize(
+                fun=energy_cause_shallow,
+                args=(k, self.B_inv, self.rho),
+                x0=beta_init,
+                method=method,
+                jac=gradient_cause_shallow,
+                hess=curvature_cause_shallow)
+
+        beta_0 = self.minimization_result.x
+
+        curvature = curvature_cause_shallow(beta_0, k, self.B_inv, self.rho)
+
+        # (1/2)*ln(det(D))
+        sign, ln_det_curvature = np.linalg.slogdet(curvature)
+        if sign <= 0:
+            print('warning, computed sign {} in ln_det_DB'.format(sign))
+
+        term1 = 0.5 * ln_det_curvature
+        term2 = -k@beta_0
+        term3 = self.rho*np.sum(np.exp(beta_0))
+        term4 = 0.5 * beta_0@self.B_inv@beta_0
+        cause_terms = (term1, term2, term3, term4)
+
+        return cause_terms
+
+    def set_data(self, x, y, no_duplicates=False):
         assert (len(x) == len(y))
-        self.x = x
-        self.y = y
         self.k_x, self.x_indices = get_count_vector(
                 x, self.grid_coordinates, return_indices=True)
+        self.x = self.grid_coordinates[self.x_indices]
         self.k_y, self.y_indices = get_count_vector(
                 y, self.grid_coordinates, return_indices=True)
-        self.N = len(x)
+        self.y = self.grid_coordinates[self.y_indices]
+
+        if no_duplicates:
+            self.x, self.y = remove_duplicates(
+                    self.x, self.y)
+            self.k_x, self.x_indices = get_count_vector(
+                self.x, self.grid_coordinates, return_indices=True)
+            self.k_y, self.y_indices = get_count_vector(
+                self.y, self.grid_coordinates, return_indices=True)
+        self.N = len(self.x)
 
         # ln(prod(k_j!)) = sum(ln(k_j!))
         # the gammaln functions is numerically stable for large numbers
@@ -148,25 +157,25 @@ class BayesianCausalModel(object):
             direction = -1
         return direction
 
-        """
-            energy = bayesian_causal_model.causal_energy.FullCausalEnergy(
-                position = causal_field,
-                k=k,
-                x=x,
-                y=y,
-                grid=self.grid,
-                sigma_beta=1e2,
-                sigma_f=1e1,
-                sigma_eta=1,
-            )
 
-            minimizer = nifty5.minimization.VL_BFGS(controller=controller)
-            self.minimum = minimizer(causal_energy)[0]
-            energy_terms = self.minimum.get_value_terms()
-            minimal_energy = sum(energy_terms)
-            minimum_determinant = self.minimum.get_determinant()
-            # TODO: what about 1/2pi in the det term?
-            evidence = minimal_energy + 0.5*(minimum_determinant)
-        else:
-            raise NotImplementedError()
-        """
+# Energy
+def energy_cause_shallow(beta, k, B_inv, rho):
+    term1 = -k@beta
+    term2 = rho*np.sum(np.exp(beta))
+    term3 = 0.5 * beta@B_inv@beta
+    return term1 + term2 + term3
+
+
+# Gradient / Jacobian
+def gradient_cause_shallow(beta, k, B_inv, rho):
+    term1 = -k
+    term2 = rho*np.exp(beta)
+    term3 = beta@B_inv
+    return term1 + term2 + term3
+
+
+# Curvature / Hessian
+def curvature_cause_shallow(beta, k, B_inv, rho):
+    term1 = rho*np.diag(np.exp(beta))
+    term2 = B_inv
+    return term1 + term2

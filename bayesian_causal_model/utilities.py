@@ -1,24 +1,5 @@
 import numpy as np
 
-import nifty5
-
-
-def probe_operator(operator):
-    """
-    probe a symmetric operator in dim terations by just applying times to unit
-        vectors. volume factors not included
-    """
-    domain = operator.domain[0]
-    dim = domain.shape[0]
-    operator_matrix = np.zeros((dim, dim))
-    for i in range(dim):
-        a = nifty5.Field(domain=domain, val=np.zeros(dim))
-        a.val[i] = 1
-        right = operator.times(a)
-        operator_matrix[:, i] = np.array(right.val)
-
-    return operator_matrix
-
 
 def get_count_vector(x, grid_coordinates, return_indices=False):
         """
@@ -26,6 +7,8 @@ def get_count_vector(x, grid_coordinates, return_indices=False):
 
         Parameters:
         ----------
+        x : numpy array of observations
+        grid_coordinates : numpy array of the bin means
         return_indices: boolean, whether the indices of the given samples wrt
             the grid should be returned
 
@@ -44,6 +27,28 @@ def get_count_vector(x, grid_coordinates, return_indices=False):
             return (k, x_indices)
         else:
             return k
+
+
+def get_diff_matrix(N):
+    """
+    quick hack to get the matrix corresponding to numerical differentiation
+        (finite differences)
+
+    Parameters:
+    ----------
+    N : int, number of points
+    """
+    matrix = np.zeros((N, N))
+    for i in range(N):
+        left = np.zeros(N)
+        left[i] = 1
+        for j in range(N):
+            right = np.zeros(N)
+            right[j] = 1
+            matrix[i, j] = np.gradient(left)@np.gradient(right)
+    return matrix
+                                                    
+
 
 def remove_duplicates(x, y):
     u, unique_x_indices = np.unique(x, return_index=True)

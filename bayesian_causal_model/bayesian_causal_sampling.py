@@ -32,16 +32,19 @@ class BayesianCausalSampler(object):
         DFT = scipy.linalg.dft(N_bins, scale='sqrtn')
         DHT = np.real(DFT) + np.imag(DFT)
 
+        fourier_modes = (
+                list(range(N_bins//2 + 1)) + list(range(N_bins//2 - 1, 0, -1)))
+
         self.power_spectrum_beta = power_spectrum_beta
         self.B_h = np.diag([
             power_spectrum_beta(q)
-            for q in list(range(N_bins//2 + 1)) + list(range(N_bins//2 - 1, 0, -1))])
+            for q in fourier_modes])
         self.B = DHT.T@self.B_h@DHT
         self.B_inv = scipy.linalg.inv(self.B)
 
         self.F_h = np.diag([
             power_spectrum_f(q)
-            for q in list(range(N_bins//2 + 1)) + list(range(N_bins//2 - 1, 0, -1))])
+            for q in fourier_modes])
         self.F = DHT.T@self.F_h@DHT
 
         # set the noise variance
@@ -108,7 +111,8 @@ class BayesianCausalSampler(object):
         y_sample = f_scaled[x_sample_indices] + n_sample
 
         if discretize:
-            y_sample = Scaler.fit_transform(y_sample.reshape(-1, 1)).reshape(-1)
+            y_sample = Scaler.fit_transform(
+                    y_sample.reshape(-1, 1)).reshape(-1)
             grid_coordinates = np.linspace(0, 1, self.N_bins)
             y_sample = grid_coordinates[
                     ([np.abs(grid_coordinates - y_sample[i]).argmin()
