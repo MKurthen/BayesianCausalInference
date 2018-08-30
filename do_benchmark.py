@@ -8,8 +8,7 @@ import nifty5
 
 import bayesian_causal_model.cause_model_shallow
 import bayesian_causal_model_nifty.cause_model_shallow
-from parser import BCMParser
-from benchmark_utils import get_benchmark_default_length, get_pair
+from benchmark_utils import BCMParser, get_benchmark_default_length, get_pair
 
 parser = BCMParser()
 args = parser.parse_args()
@@ -29,6 +28,7 @@ POWER_SPECTRUM_BETA_STR = args.power_spectrum_beta
 POWER_SPECTRUM_F_STR = args.power_spectrum_f
 RHO = args.rho
 SCALE_MAX = args.scale_max
+SUBSAMPLE = args.subsample
 
 CONFIG = args.config
 if CONFIG is not None:
@@ -81,12 +81,8 @@ weighted_correct = 0
 tp, tn, fp, fn = 0, 0, 0, 0
 
 for i in range(FIRST_ID-1, LAST_ID):
-    if BENCHMARK == 'tcep':
-        (x, y), true_direction, weight = get_pair(
-                i, BENCHMARK, return_weight=True)
-    else:
-        (x, y), true_direction = get_pair(i, BENCHMARK)
-        weight = 1
+    (x, y), true_direction, weight = get_pair(
+                i, BENCHMARK, subsample_size=SUBSAMPLE)
     if true_direction == 0:
         continue
 

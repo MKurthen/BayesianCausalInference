@@ -10,6 +10,7 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_BENCHMARK_LENGTH = {
     'CE-Cha': 300,
     'tcep': 108,
+    'tcep_20samples': 108,
     'bcs_power6_nvar5e-2': 100,
     'bcs_power6_nvar1e-1': 100,
     'bcs_power6_nvar5e-1': 100,
@@ -22,13 +23,16 @@ DEFAULT_BENCHMARK_LENGTH = {
     'bcs_16bins': 100,
     'bcs_10samples': 100,
     'bcs_30samples': 100,
+    'bcs_invertible': 100,
     'SIM': 100,
     }
+
 
 def get_benchmark_default_length(benchmark):
     return DEFAULT_BENCHMARK_LENGTH[benchmark]
 
-def get_pair(i, benchmark):
+
+def get_pair(i, benchmark, subsample_size=500):
     if benchmark == 'CE-Cha':
         with open(os.path.join(
                 dir_path, './benchmark_data_pairwise/CE-Cha_pairs.tab')) as f:
@@ -49,9 +53,10 @@ def get_pair(i, benchmark):
             true_direction = -1
         weight = 1
 
-    elif benchmark in [ 
+    elif benchmark in [
             'SIM',
             'tcep',
+            'tcep_20samples',
             'bcs_power6_nvar5e-2',
             'bcs_power6_nvar1e-1',
             'bcs_power6_nvar5e-1',
@@ -64,11 +69,12 @@ def get_pair(i, benchmark):
             'bcs_16bins',
             'bcs_10samples',
             'bcs_30samples',
+            'bcs_invertible',
             ]:
         # these benchmark datasets use the formatting from Mooij16,
         #   in the folder with the name of the benchmark there is a number of
         #   txt-files, named pair0003.txt e.g., with ' '-delimited data
-        #   pairmeta.txt columns 1,2,3,4 contain first column index of cause, 
+        #   pairmeta.txt columns 1,2,3,4 contain first column index of cause,
         #       last column
         #   index of cause, first column index of effect, last column index of
         #   effect. We exclude datasets with more than 1 effect or cause
@@ -76,6 +82,13 @@ def get_pair(i, benchmark):
         dataset = np.genfromtxt(os.path.join(
             dir_path,
             'benchmarks/{}/pair0{:03d}.txt'.format(benchmark, i+1)))
+
+        # resample large datasets
+        if (dataset.shape[0] > subsample_size):
+            resample_indices = np.random.choice(
+                    np.arange(dataset.shape[0]), subsample_size, replace=False)
+            dataset = dataset[resample_indices]
+
         pair = (dataset[:, 0], dataset[:, 1])
         meta = np.genfromtxt(os.path.join(
             dir_path,
@@ -120,10 +133,10 @@ class BCMParser(argparse.ArgumentParser):
                 '"model_configurations.txt"')
         self.add_argument(
                 '--first_id', type=int, default=1,
-                help='first id to process, 1 <= id <= 300')
+                help='first id to process, indexing starts with 1')
         self.add_argument(
                 '--last_id', type=int, default=None,
-                help='last id to process, 1 <= id <= 300')
+                help='last id to process (inclusive)')
         self.add_argument(
                 '--power_spectrum_beta', type=str, default='1/(q**4 + 1)',
                 help='assumed power spectrum beta')
@@ -150,3 +163,7 @@ class BCMParser(argparse.ArgumentParser):
         self.add_argument(
                 '--scale_max', type=float, default=1,
                 help='scale the data to the interval [0, scale_max]')
+        self.add_argument(
+                '--subsample', type=float, default=500,
+                help='number of maximum samples, if the dataset is larger it'
+                     'will be subsampled to the given number')
