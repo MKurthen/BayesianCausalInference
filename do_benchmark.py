@@ -78,7 +78,6 @@ if os.path.isfile(prediction_file):
 accuracy = 0
 sum_of_weights = 0
 weighted_correct = 0
-tp, tn, fp, fn = 0, 0, 0, 0
 
 for i in range(FIRST_ID-1, LAST_ID):
     (x, y), true_direction, weight = get_pair(
@@ -118,14 +117,6 @@ for i in range(FIRST_ID-1, LAST_ID):
     H1 = bcm.get_evidence(direction=1, verbosity=1)
     H2 = bcm.get_evidence(direction=-1, verbosity=1)
     predicted_direction = 1 if int(H1 < H2) else 0
-    if predicted_direction == 1 and true_direction == 1:
-        tp += 1
-    if predicted_direction == 1 and true_direction == 0:
-        fp += 1
-    if predicted_direction == 0 and true_direction == 1:
-        fn += 1
-    if predicted_direction == 0 and true_direction == 0:
-        tn += 1
 
     if predicted_direction == true_direction:
         fore = colorama.Fore.GREEN

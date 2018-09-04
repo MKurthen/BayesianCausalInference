@@ -4,7 +4,6 @@ function [Wopt,rowp] = nzdiagbruteforce( W )
 % Try all row permutations, find best solution
 %--------------------------------------------------------------------------
 
-fprintf('%d\n', W)
 n = size(W,1);
 
 bestval = Inf;
@@ -19,6 +18,7 @@ nperms = size(allperms,1);
 for i=1:nperms,
     Pr = eye(n); Pr = Pr(:,allperms(i,:));
     Wtilde = Pr*W;
+    fprintf('WTILDESIZE %d \n', size(Wtilde))
     c = nzdiagscore(Wtilde);
     if c<bestval,
 	bestWtilde = Wtilde;

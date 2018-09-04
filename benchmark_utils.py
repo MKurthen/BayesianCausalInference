@@ -164,6 +164,6 @@ class BCMParser(argparse.ArgumentParser):
                 '--scale_max', type=float, default=1,
                 help='scale the data to the interval [0, scale_max]')
         self.add_argument(
-                '--subsample', type=float, default=500,
+                '--subsample', type=int, default=500,
                 help='number of maximum samples, if the dataset is larger it'
                      'will be subsampled to the given number')
