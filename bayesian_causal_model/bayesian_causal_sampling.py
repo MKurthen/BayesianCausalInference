@@ -50,7 +50,16 @@ class BayesianCausalSampler(object):
         # set the noise variance
         self.noise_var = noise_var
 
-    def draw_sample_fields(self):
+    def draw_sample_fields(self, invertible_mechanism=False):
+        """
+        draws the actual sample fields beta and f
+
+        Parameters:
+        ----------
+        invertible_mechanism : Bool, experimental approach to draw an
+            invertible causal mechanism f, by first applying exp (to ensure
+            positivity) and afterwards accumulating the values
+        """
         self.beta = np.random.multivariate_normal(
                 mean=np.zeros(self.N_bins),
                 cov=self.B)
@@ -62,6 +71,9 @@ class BayesianCausalSampler(object):
         self.f = np.random.multivariate_normal(
                 mean=np.zeros(self.N_bins),
                 cov=self.F)
+
+        if invertible_mechanism:
+            self.f = np.cumsum(np.exp(self.f), axis=0)
 
     def get_samples(self, sample_size, poisson=True, discretize=True):
         """
