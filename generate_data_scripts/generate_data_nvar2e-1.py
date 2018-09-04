@@ -7,7 +7,7 @@ sys.path.append('..')
 import bayesian_causal_model.bayesian_causal_sampling
 
 BENCHMARK_FOLDER = (
-    '/afs/mpa/home/maxk/bayesian_causal_inference/benchmarks/bcs_nvar2e-2/')
+    '/afs/mpa/home/maxk/bayesian_causal_inference/benchmarks/bcs_nvar2e-1/')
 
 power_spectrum_beta = lambda q: 512/(q**4 + 1)
 power_spectrum_f = lambda q: 512/(q**4 + 1)
