@@ -4,7 +4,7 @@ from sklearn.preprocessing import MinMaxScaler
 
 import sys
 sys.path.append('..')
-import bayesian_causal_model.bayesian_causal_sampling_numpy
+import bayesian_causal_model.bayesian_causal_sampling
 
 BENCHMARK_FOLDER = (
     '/afs/mpa/home/maxk/bayesian_causal_inference/benchmarks/bcs_power6')
@@ -14,7 +14,7 @@ power_spectrum_f = lambda q: 512/(q**6 + 1)
 
 for i in range(100):
     np.random.seed(i)
-    bcs = bayesian_causal_model.bayesian_causal_sampling_numpy.BayesianCausalSampler(
+    bcs = bayesian_causal_model.bayesian_causal_sampling.BayesianCausalSampler(
         N_bins=512,
         power_spectrum_beta=power_spectrum_beta,
         power_spectrum_f=power_spectrum_f,
