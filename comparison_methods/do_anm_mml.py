@@ -43,6 +43,12 @@ for i in range(FIRST_ID-1, LAST_ID):
     y_ = matlab.double(y.tolist())
     y_T = eng.transpose(y_)
 
+    # the mml code assigns a default parameter "maxclusters = 50" if not
+    #   set otherwise. This leads to an error if the number of samples is < 50
+    if len(x) < 50:
+        methodpars['MML'] = eng.struct()
+        methodpars['MML']['maxclusters'] = matlab.double([len(x)])
+
     result = eng.cep_anm(x_T, y_T, methodpars)
     predicted_direction = result['decision']
 
