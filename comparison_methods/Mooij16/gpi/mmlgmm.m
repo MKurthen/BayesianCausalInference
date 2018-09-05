@@ -27,10 +27,14 @@ function [DL,INFO] = mmlgmm(X,CFG)
 % Copyright (c) 2010  Oliver Stegle, Joris Mooij
 % All rights reserved.  See the file LICENSE for license terms.
 
-  if nargin < 3
+  if nargin < 2
     CFG = struct;
   end;
   
+  fprintf('maxcl %d', CFG.maxclusters);
+  if isinteger(CFG.maxclusters)
+      fprintf('ISINTEGER');
+  end;
   if ~isfield(CFG,'reg')
     CFG.reg = 1e-4;
   end;
