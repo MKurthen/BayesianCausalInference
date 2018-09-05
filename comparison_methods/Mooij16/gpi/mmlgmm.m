@@ -31,10 +31,10 @@ function [DL,INFO] = mmlgmm(X,CFG)
     CFG = struct;
   end;
   
-  end;
   if ~isfield(CFG,'reg')
     CFG.reg = 1e-4;
   end;
+
   if ~isfield(CFG,'maxclusters')
     CFG.maxclusters = 50;
   end;
