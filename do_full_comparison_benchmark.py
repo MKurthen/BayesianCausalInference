@@ -19,6 +19,7 @@ args = parser.parse_args()
 BENCHMARK = args.benchmark
 FIRST_ID = args.first_id
 LAST_ID = args.last_id
+VERBOSITY = args.verbosity
 
 if LAST_ID is None:
     LAST_ID = get_benchmark_default_length(BENCHMARK)
@@ -41,12 +42,16 @@ eng.addpath(
 # parameters for ANM-HSIC
 methodpars_anm_hsic = eng.struct()
 methodpars_anm_hsic['FITC'] = 0
+methodpars_anm_hsic['gaussianize'] = 0
+methodpars_anm_hsic['meanf'] = 'meanConst'
 methodpars_anm_hsic['minimize'] = 'minimize_lbfgsb'
 methodpars_anm_hsic['evaluation'] = 'HSIC'
 
 # parameters for ANM-MML
 methodpars_anm_mml = eng.struct()
 methodpars_anm_mml['FITC'] = 0
+methodpars_anm_mml['gaussianize'] = 0
+methodpars_anm_mml['meanf'] = 'meanConst'
 methodpars_anm_mml['minimize'] = 'minimize_lbfgsb'
 methodpars_anm_mml['evaluation'] = 'MML'
 
@@ -72,10 +77,11 @@ weighted_correct_anm_mml = 0
 weighted_correct_igci = 0
 weighted_correct_cgnn = 0
 
-# silence output
 save_stdout = sys.stdout
-sys.stdout = open('trash_stdout', 'w')
-sys.stderr = open('trash_stderr', 'w')
+if VERBOSITY == 0:
+    # silence output
+    sys.stdout = open('trash_stdout', 'w')
+    sys.stderr = open('trash_stderr', 'w')
 
 for i in range(FIRST_ID-1, LAST_ID):
 
@@ -122,13 +128,23 @@ for i in range(FIRST_ID-1, LAST_ID):
                 predicted_direction_lingam == true_direction)
 
     # test ANM-HSIC
-    result = eng.cep_anm(x_T, y_T, methodpars_anm_hsic, stdout=out, stderr=err)
+    result = eng.cep_anm(
+            x_T, y_T, methodpars_anm_hsic,
+            stdout=io.StringIO(), stderr=io.StringIO())
     predicted_direction_anm_hsic = result['decision']
     weighted_correct_anm_hsic += weight*(
                 predicted_direction_anm_hsic == true_direction)
 
     # test ANM-MML
-    result = eng.cep_anm(x_T, y_T, methodpars_anm_mml, stdout=out, stderr=err)
+
+    # the mml code assigns a default parameter "maxclusters = 50" if not
+    #   set otherwise. This leads to an error if the number of samples is < 50
+    if len(x) < 50:
+        methodpars_anm_mml['MML'] = eng.struct()
+        methodpars_anm_mml['MML']['maxclusters'] = matlab.double([len(x)])
+    result = eng.cep_anm(
+            x_T, y_T, methodpars_anm_mml,
+            stdout=io.StringIO(), stderr=io.StringIO())
     predicted_direction_anm_mml = result['decision']
     weighted_correct_anm_mml += weight*(
                 predicted_direction_anm_mml == true_direction)
@@ -183,7 +199,8 @@ for i in range(FIRST_ID-1, LAST_ID):
                 accuracy_cgnn
                 ))
     # re-silence output
-    sys.stdout = open('trash_stdout', 'w')
+    if VERBOSITY == 0:
+        sys.stdout = open('trash_stdout', 'w')
 
 # reactivate output
 sys.stdout = save_stdout
