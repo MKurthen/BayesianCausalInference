@@ -31,9 +31,6 @@ function [DL,INFO] = mmlgmm(X,CFG)
     CFG = struct;
   end;
   
-  fprintf('maxcl %d', CFG.maxclusters);
-  if isinteger(CFG.maxclusters)
-      fprintf('ISINTEGER');
   end;
   if ~isfield(CFG,'reg')
     CFG.reg = 1e-4;
