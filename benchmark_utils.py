@@ -10,7 +10,13 @@ dir_path = os.path.dirname(os.path.realpath(__file__))
 DEFAULT_BENCHMARK_LENGTH = {
     'CE-Cha': 300,
     'tcep': 108,
+    'tcep_10samples': 108,
     'tcep_20samples': 108,
+    'tcep_20samples_x20': 2160,
+    'tcep_30samples': 108,
+    'tcep_50samples': 108,
+    'tcep_50samples_x20': 2160,
+    'tcep_75samples_x20': 2160,
     'bcs_power6_nvar5e-2': 100,
     'bcs_power6_nvar1e-1': 100,
     'bcs_power6_nvar5e-1': 100,
@@ -55,7 +61,13 @@ def get_pair(i, benchmark, subsample_size=500):
     elif benchmark in [
             'SIM',
             'tcep',
+            'tcep_10samples',
             'tcep_20samples',
+            'tcep_20samples_x20',
+            'tcep_30samples',
+            'tcep_50samples',
+            'tcep_50samples_x20',
+            'tcep_75samples_x20',
             'bcs_power6_nvar5e-2',
             'bcs_power6_nvar1e-1',
             'bcs_power6_nvar5e-1',
@@ -102,7 +114,7 @@ def get_pair(i, benchmark, subsample_size=500):
         else:
             true_direction = 0
 
-        if benchmark == 'tcep':
+        if benchmark.startswith('tcep'):
             weight = meta[i, 5]
         else:
             weight = 1
@@ -117,13 +129,10 @@ class BCMParser(argparse.ArgumentParser):
         self.add_argument(
                 '--name', type=str, help='name for the benchmark results')
         self.add_argument(
-                '--nbins', type=int, default=256,
+                '--nbins', type=int, default=512,
                 help='number of bins for inference model')
         self.add_argument(
-                '--num_samples', type=int, default=256,
-                help='number of samples to draw')
-        self.add_argument(
-                '--noise_var', type=float, default=0.1,
+                '--noise_var', type=float, default=0.01,
                 help='value for noise_var')
         self.add_argument(
                 '--config', type=int, default=None,
@@ -136,10 +145,10 @@ class BCMParser(argparse.ArgumentParser):
                 '--last_id', type=int, default=None,
                 help='last id to process (inclusive)')
         self.add_argument(
-                '--power_spectrum_beta', type=str, default='1/(q**4 + 1)',
+                '--power_spectrum_beta', type=str, default='2048/(q**4 + 1)',
                 help='assumed power spectrum beta')
         self.add_argument(
-                '--power_spectrum_f', type=str, default='1/(q**4 + 1)',
+                '--power_spectrum_f', type=str, default='2048/((q/4)**4 + 1)',
                 help='assumed power spectrum f')
         self.add_argument(
                 '--rho', type=float, default=1., help='rho value')
@@ -158,6 +167,12 @@ class BCMParser(argparse.ArgumentParser):
         self.add_argument(
                 '--model', type=int, default=1,
                 help='which model to use for inference')
+        self.add_argument(
+                '--repetitions', type=int, default=1,
+                help='number of repetitions, with different seed each')
+        self.add_argument(
+                '--seed', type=int, default=None,
+                help='random seed to use')
         self.add_argument(
                 '--scale_max', type=float, default=1,
                 help='scale the data to the interval [0, scale_max]')
