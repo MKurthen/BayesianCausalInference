@@ -90,8 +90,8 @@ class CausalModelShallow(BayesianCausalModel):
                 ('-k^dagger.beta_0', cause_terms[1]),
                 ('rho(One.e^beta_0)', cause_terms[2]),
                 ('1/2 beta_0.(B^-1).beta_0', cause_terms[3]),
-                ('1/2 y.((F_tilde + N)^-1).y', effect_terms[0]),
-                ('1/2 ln(det(F_tilde + N))', effect_terms[1]),
+                ('1/2 y.((F_tilde + E)^-1).y', effect_terms[0]),
+                ('1/2 ln(det(F_tilde + E))', effect_terms[1]),
                 ]
 
         if verbosity > 0:
@@ -102,8 +102,8 @@ class CausalModelShallow(BayesianCausalModel):
                     '   rho(One.e^beta_0_vec):            {:.2e}\n'
                     '   1/2 beta_0.B^-1.beta_0:           {:.2e}\n'
                     '   ln(prod(k_j!)):                   {:.2e}\n'
-                    '   1/2 y^T.((F_tilde + N)^-1).y:     {:.2e}\n'
-                    '   1/2 ln(|F_tilde + N|):            {:.2e}'.format(
+                    '   1/2 y^T.((F_tilde + E)^-1).y:     {:.2e}\n'
+                    '   1/2 ln(|F_tilde + E|):            {:.2e}'.format(
                         cause_terms[0],
                         cause_terms[1], cause_terms[2], cause_terms[3],
                         log_prod_k_fact,
