@@ -31,7 +31,11 @@ to use the methods for comparison:
 
 # Benchmarks
 
-to perform a benchmark, call the script do_benchmark.py via:
+to do the full comparison on a benchmark (i.e. test several algorithms on a dataset), call do_full_comparison_benchmark.py via:
+
+    python do_full_comparison_benchmark.py --args
+
+to perform a single benchmark with the BCI model, call the script do_benchmark.py via:
 
     python do_benchmark.py --args
   
@@ -40,7 +44,7 @@ where args refer to:
   --benchmark: one of the supported benchmarks, either a "bcs" 
         (bayesian causal sampling) benchmark, these are stored
         in the './benchmarks' folder and use the formatting as
-        in the comparative study by Mooij16
+        in the comparative study by Mooij16, 
 
   --model: currently either 1 or 2, 1 refers to the shallow model
         implemented via NumPy, 2 uses the same model implemented
