@@ -15,6 +15,7 @@ args = parser.parse_args()
 NAME = args.name
 FIRST_ID = args.first_id
 LAST_ID = args.last_id
+SEED = args.seed
 
 N_BINS = args.nbins
 NOISE_VAR = args.noise_var
@@ -24,8 +25,10 @@ VERBOSITY = args.verbosity
 POWER_SPECTRUM_BETA_STR = args.power_spectrum_beta
 POWER_SPECTRUM_F_STR = args.power_spectrum_f
 RHO = args.rho
+REPETITIONS = args.repetitions
 SCALE_MAX = args.scale_max
 SUBSAMPLE = args.subsample
+
 
 CONFIG = args.config
 if CONFIG is not None:
@@ -59,7 +62,6 @@ print(
             SCALE_MAX,
             NAME))
 
-np.random.seed(1)
 POWER_SPECTRUM_BETA = lambda q: eval(POWER_SPECTRUM_BETA_STR)
 POWER_SPECTRUM_F = lambda q: eval(POWER_SPECTRUM_F_STR)
 scale = (0, SCALE_MAX)
@@ -72,59 +74,61 @@ if os.path.isfile(prediction_file):
         prediction_file = './benchmark_predictions/{}_{}_{}.txt'.format(
                 BENCHMARK, NAME, c)
 
-np.random.seed(1)
 
 sum_of_weights = 0
 weighted_correct = 0
 
-for i in range(FIRST_ID-1, LAST_ID):
-    (x, y), true_direction, weight = get_pair(
-                i, BENCHMARK, subsample_size=SUBSAMPLE)
-    if true_direction == 0:
-        continue
+for rep in range(REPETITIONS):
+    np.random.seed(rep)
 
-    scaler = MinMaxScaler(scale)
-    x, y = scaler.fit_transform(np.array((x, y)).T).T
-
-    bcm = bayesian_causal_model.cause_model_shallow.CausalModelShallow(
-        N_bins=N_BINS,
-        noise_var=NOISE_VAR,
-        rho=RHO,
-        power_spectrum_beta=POWER_SPECTRUM_BETA,
-        power_spectrum_f=POWER_SPECTRUM_F,
-        )
-
-    bcm.set_data(x, y)
-
-    H1 = bcm.get_evidence(direction=1, verbosity=VERBOSITY - 1)
-    H2 = bcm.get_evidence(direction=-1, verbosity=VERBOSITY - 1)
-    predicted_direction = 1 if int(H1 < H2) else -1
-
-    if predicted_direction == true_direction:
-        fore = colorama.Fore.GREEN
-        weighted_correct += weight
-    else:
-        fore = colorama.Fore.RED
-    sum_of_weights += weight
-    accuracy = weighted_correct / sum_of_weights
-
-    if VERBOSITY > 0:
-        print(
-                'dataset {}, {} true direction: {}, predicted direction {}\n'
-                'H1: {:.2e},\n H2: {:.2e},\n{}'
-                'accuracy so far: {:.2f}'.format(
-                    i,
-                    fore,
-                    true_direction,
-                    predicted_direction,
-                    H1,
-                    H2,
-                    colorama.Style.RESET_ALL,
-                    accuracy))
-
-    with open(prediction_file, 'a') as f:
-        f.write('{} {} {} {}\n'.format(i+1, predicted_direction, H1, H2))
-
+    for i in range(FIRST_ID-1, LAST_ID):
+        (x, y), true_direction, weight = get_pair(
+                    i, BENCHMARK, subsample_size=SUBSAMPLE)
+        if true_direction == 0:
+            continue
+    
+        scaler = MinMaxScaler(scale)
+        x, y = scaler.fit_transform(np.array((x, y)).T).T
+    
+        bcm = bayesian_causal_model.cause_model_shallow.CausalModelShallow(
+            N_bins=N_BINS,
+            noise_var=NOISE_VAR,
+            rho=RHO,
+            power_spectrum_beta=POWER_SPECTRUM_BETA,
+            power_spectrum_f=POWER_SPECTRUM_F,
+            )
+    
+        bcm.set_data(x, y)
+    
+        H1 = bcm.get_evidence(direction=1, verbosity=VERBOSITY - 1)
+        H2 = bcm.get_evidence(direction=-1, verbosity=VERBOSITY - 1)
+        predicted_direction = 1 if int(H1 < H2) else -1
+    
+        if predicted_direction == true_direction:
+            fore = colorama.Fore.GREEN
+            weighted_correct += weight
+        else:
+            fore = colorama.Fore.RED
+        sum_of_weights += weight
+        accuracy = weighted_correct / sum_of_weights
+    
+        if VERBOSITY > 0:
+            print(
+                    'dataset {}, {} true direction: {}, predicted direction {}\n'
+                    'H1: {:.2e},\n H2: {:.2e},\n{}'
+                    'accuracy so far: {:.2f}'.format(
+                        i,
+                        fore,
+                        true_direction,
+                        predicted_direction,
+                        H1,
+                        H2,
+                        colorama.Style.RESET_ALL,
+                        accuracy))
+    
+        with open(prediction_file, 'a') as f:
+            f.write('{} {} {} {}\n'.format(i+1, predicted_direction, H1, H2))
+    
 print('accuracy: {:.2f}'.format(accuracy))
 
 

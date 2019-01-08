@@ -22,6 +22,12 @@ LAST_ID = args.last_id
 VERBOSITY = args.verbosity
 SUBSAMPLE_SIZE = args.subsample
 REPETITIONS = args.repetitions
+BCM = args.do_bcm
+ANM_HSIC = args.do_anm_hsic
+ANM_MML = args.do_anm_mml
+IGCI = args.do_igci
+CGNN = args.do_cgnn
+
 
 if LAST_ID is None:
     LAST_ID = get_benchmark_default_length(BENCHMARK)
@@ -79,12 +85,6 @@ weighted_correct_anm_mml = 0
 weighted_correct_igci = 0
 weighted_correct_cgnn = 0
 
-BCM = 1
-ANM_HSIC = 1
-ANM_MML = 1
-IGCI = 1
-CGNN = 1
-
 save_stdout = sys.stdout
 if VERBOSITY == 0:
     # silence output
@@ -98,7 +98,7 @@ for rep in range(REPETITIONS):
     # re-silence output
     if VERBOSITY == 0:
         sys.stdout = open('trash_stdout', 'w')
-    np.random.seed(rep*10)
+    np.random.seed(rep)
     # encountered some memory leakage problems, see if this can be avoided by
     #   restarting the matlab engine
     del eng
@@ -128,7 +128,11 @@ for rep in range(REPETITIONS):
         scaler = MinMaxScaler(feature_range=(0, 1))
         x_scaled, y_scaled = scaler.fit_transform(np.array((x, y)).T).T
 
-        pair_predictions = {'true_direction': true_direction}
+        pair_predictions = {
+                'true_direction': true_direction,
+                'number': i,
+                'weight': weight
+                }
         # test bcm
         if BCM:
             bcm = bayesian_causal_model.cause_model_shallow.CausalModelShallow(
@@ -256,7 +260,7 @@ for rep in range(REPETITIONS):
             sys.stdout = open('trash_stdout', 'w')
 
         with open('predictions_{}.txt'.format(BENCHMARK), 'a') as f:
-            f.write(str({i: pair_predictions}) + '\n')
+            f.write(str(pair_predictions) + '\n')
 # reactivate output
 sys.stdout = save_stdout
 print(
