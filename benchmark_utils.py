@@ -11,9 +11,12 @@ DEFAULT_BENCHMARK_LENGTH = {
     'CE-Cha': 300,
     'tcep': 108,
     'tcep_10samples': 108,
+    'tcep_10samples_x10': 1080,
     'tcep_20samples': 108,
     'tcep_20samples_x20': 2160,
     'tcep_30samples': 108,
+    'tcep_30samples_x20': 2160,
+    'tcep_40samples_x20': 2160,
     'tcep_50samples': 108,
     'tcep_50samples_x20': 2160,
     'tcep_75samples_x20': 2160,
@@ -62,9 +65,12 @@ def get_pair(i, benchmark, subsample_size=500):
             'SIM',
             'tcep',
             'tcep_10samples',
+            'tcep_10samples_x10',
             'tcep_20samples',
             'tcep_20samples_x20',
             'tcep_30samples',
+            'tcep_30samples_x20',
+            'tcep_40samples_x20',
             'tcep_50samples',
             'tcep_50samples_x20',
             'tcep_75samples_x20',
@@ -180,3 +186,13 @@ class BCMParser(argparse.ArgumentParser):
                 '--subsample', type=int, default=500,
                 help='number of maximum samples, if the dataset is larger it'
                      'will be subsampled to the given number')
+        self.add_argument('--do_cgnn', type=int, default=1,
+                help='switch CGNN of or on (default)')
+        self.add_argument('--do_anm_hsic', type=int, default=1,
+                help='switch ANM-HSIC of or on (default)')
+        self.add_argument('--do_anm_mml', type=int, default=1,
+                help='switch ANM-MML of or on (default)')
+        self.add_argument('--do_igci', type=int, default=1,
+                help='switch IGCI of or on (default)')
+        self.add_argument('--do_bcm', type=int, default=1,
+                help='switch BCM of or on (default)')
