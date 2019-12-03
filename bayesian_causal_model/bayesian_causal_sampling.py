@@ -10,12 +10,12 @@ class BayesianCausalSampler(object):
     """
 
     def __init__(
-            self,
-            N_bins=512,
-            power_spectrum_beta=lambda q: 512/(q**4 + 1),
-            power_spectrum_f=lambda q: 512/(q**4 + 1),
-            noise_var=0.1,
-            ):
+        self,
+        N_bins=512,
+        power_spectrum_beta=lambda q: 512 / (q ** 4 + 1),
+        power_spectrum_f=lambda q: 512 / (q ** 4 + 1),
+        noise_var=0.1,
+    ):
         """
         N_bins : int
             number of bins for the sample spaces
@@ -29,23 +29,20 @@ class BayesianCausalSampler(object):
         self.N_bins = N_bins
 
         # calculate Discrete Hartley Transform Matrix
-        DFT = scipy.linalg.dft(N_bins, scale='sqrtn')
+        DFT = scipy.linalg.dft(N_bins, scale="sqrtn")
         DHT = np.real(DFT) + np.imag(DFT)
 
-        fourier_modes = (
-                list(range(N_bins//2 + 1)) + list(range(N_bins//2 - 1, 0, -1)))
+        fourier_modes = list(range(N_bins // 2 + 1)) + list(
+            range(N_bins // 2 - 1, 0, -1)
+        )
 
         self.power_spectrum_beta = power_spectrum_beta
-        self.B_h = np.diag([
-            power_spectrum_beta(q)
-            for q in fourier_modes])
-        self.B = DHT.T@self.B_h@DHT
+        self.B_h = np.diag([power_spectrum_beta(q) for q in fourier_modes])
+        self.B = DHT.T @ self.B_h @ DHT
         self.B_inv = scipy.linalg.inv(self.B)
 
-        self.F_h = np.diag([
-            power_spectrum_f(q)
-            for q in fourier_modes])
-        self.F = DHT.T@self.F_h@DHT
+        self.F_h = np.diag([power_spectrum_f(q) for q in fourier_modes])
+        self.F = DHT.T @ self.F_h @ DHT
 
         # set the noise variance
         self.noise_var = noise_var
@@ -61,16 +58,14 @@ class BayesianCausalSampler(object):
             positivity) and afterwards accumulating the values
         """
         self.beta = np.random.multivariate_normal(
-                mean=np.zeros(self.N_bins),
-                cov=self.B)
+            mean=np.zeros(self.N_bins), cov=self.B
+        )
 
         # numerical values for p(x|beta) = exp(beta(x)) / sum_z exp(beta(z))
         self.p_x = np.exp(self.beta)
-        self.p_x = (1/np.sum(self.p_x))*self.p_x
+        self.p_x = (1 / np.sum(self.p_x)) * self.p_x * self.N_bins
 
-        self.f = np.random.multivariate_normal(
-                mean=np.zeros(self.N_bins),
-                cov=self.F)
+        self.f = np.random.multivariate_normal(mean=np.zeros(self.N_bins), cov=self.F)
 
         if invertible_mechanism:
             self.f = np.cumsum(np.exp(self.f), axis=0)
@@ -89,11 +84,12 @@ class BayesianCausalSampler(object):
         """
         if poisson:
             # draw with poisson dist, where each lambda[i] propto exp(beta)
-            k_sample = np.random.poisson(
-                    lam=self.p_x*sample_size, size=self.N_bins)
+            #   this gives a vector like [4, 0, 2, 0, 1]
+            k_sample = np.random.poisson(lam=self.p_x * sample_size, size=self.N_bins)
             x_sample_indices = []
+            # this produces an "observation vector" such as [0, 0, 0, 0, 2, 2, 4]
             for i in range(self.N_bins):
-                x_sample_indices += [i]*k_sample[i]
+                x_sample_indices += [i] * k_sample[i]
             x_sample_indices = np.array(x_sample_indices)
 
         if not poisson:
@@ -112,9 +108,8 @@ class BayesianCausalSampler(object):
 
         # sample the noise
         n_sample = np.random.normal(
-                loc=0,
-                scale=np.sqrt(self.noise_var),
-                size=len(x_sample))
+            loc=0, scale=np.sqrt(self.noise_var), size=len(x_sample)
+        )
 
         # sample y by applying the function f
         Scaler = MinMaxScaler(feature_range=(0, 1))
@@ -123,11 +118,15 @@ class BayesianCausalSampler(object):
         y_sample = f_scaled[x_sample_indices] + n_sample
 
         if discretize:
-            y_sample = Scaler.fit_transform(
-                    y_sample.reshape(-1, 1)).reshape(-1)
+            y_sample = Scaler.fit_transform(y_sample.reshape(-1, 1)).reshape(-1)
             grid_coordinates = np.linspace(0, 1, self.N_bins)
             y_sample = grid_coordinates[
-                    ([np.abs(grid_coordinates - y_sample[i]).argmin()
-                        for i in range(len(y_sample))])]
+                (
+                    [
+                        np.abs(grid_coordinates - y_sample[i]).argmin()
+                        for i in range(len(y_sample))
+                    ]
+                )
+            ]
 
         return (x_sample, y_sample)
